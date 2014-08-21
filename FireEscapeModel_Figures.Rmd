@@ -1,0 +1,311 @@
+Figure File for Models
+========================================================
+
+```{r Inits,warning=FALSE,message=FALSE}
+library(plyr)
+library(ggplot2)
+library(grid)
+library(gridExtra)
+library(stargazer)
+library(ggthemes)
+library(lme4)
+library(extrafont)
+
+setwd("/Users/danielgodwin/Dropbox/Graduate School/Dissertation/FireEscapeModel_Git/")
+
+myTheme <- theme_tufte() +
+  theme(
+    text = element_text(family="Arial", size=14),
+        axis.line = element_line(size = .3)
+    )
+
+
+displayPlotted <- read.csv("/Users/danielg7/Documents/Output/displayPlotted.csv")
+naive_growth <- read.csv("/Users/danielg7/Documents/Output/naive_growth.csv")
+
+
+```
+
+Figure 1
+-----
+```{r Figure1_Growth, fig.height=3, fig.width=3.9, echo=FALSE,warning=FALSE,message=FALSE, fig.ext='tiff'}
+
+
+
+GrowthPlots_Naive <- ggplot(data = naive_growth, aes(y=TotalSize, x=Age,color=Species,))
+GrowthPlots_Naive+
+  myTheme+
+  scale_color_colorblind("Species")+
+  geom_point(size=3)+
+  theme(legend.justification=c(0,1), legend.position=c(0,1))+
+  ylab("Estimated Basal\nDiameter (mm)\n")+
+  xlab("\nRadial Increment Count")+
+  theme(legend.direction="vertical")+
+  geom_line(data=displayPlotted,aes(y=TotalSize,x=Age,factor=Species,color=Species))
+```
+Figure 2
+-----
+```{r Figure2_FuelLoad, fig.height=4, fig.width=6.1, echo=FALSE,warning=FALSE,message=FALSE, fig.ext='tiff'}
+
+BurnMonitor_avg <- ddply(BurnMonitor_1000,.(FRI,RainfallRange),summarize,
+                         Intensity_Mean = mean(Intensity,na.rm=TRUE),
+                         Intensity_CI = 2*sd(Intensity,na.rm=TRUE)/sqrt(length(Intensity)),
+                         FuelLoad_Mean = mean(FuelLoad,na.rm=TRUE),
+                         FuelLoad_CI = 2*sd(FuelLoad,na.rm=TRUE)/sqrt(length(Intensity)),
+                         TimeSinceFire_Mean = mean(TimeSinceFire,na.rm=TRUE)
+                         )
+BurnMonitor_avg$FRI <- as.factor(BurnMonitor_avg$FRI)
+
+FuelLoadPlot <- ggplot(data = subset(BurnMonitor_avg,FRI != 1000), aes(y = FuelLoad_Mean,x=RainfallRange))+
+      scale_color_continuous("Time Since Fire (yr)",low="darkgreen",high="red",guide = guide_legend(title.position="top",label.position="bottom"))+
+
+  ylim(0,5000)+
+  geom_point(size=3)+
+  geom_errorbar(data=BurnMonitor_avg,aes(ymin=FuelLoad_Mean - FuelLoad_CI,ymax=FuelLoad_Mean + FuelLoad_CI))+
+  myTheme+
+  theme(plot.title = element_text(size=12,
+                                  hjust="0",
+                                  family = "Arial",
+                                  face="plain"))+
+    theme(legend.position=c(0,1),legend.justification=c(0,1),
+        legend.direction="horizontal")+
+  ggtitle("(a)")+
+    stat_smooth(method="loess",se=FALSE,color="black")+
+  xlab("Rainfall (mm)")+
+  ylab(expression(paste("Fuel Load ","(kg ",ha^-1,")")))
+
+IntensityPlot <- ggplot(data = BurnMonitor_avg, aes(y = Intensity_Mean,x=RainfallRange))+
+  geom_point(size=3)+
+    myTheme+
+  #  scale_color_continuous(low="darkgreen",high="red")+
+  geom_errorbar(data=BurnMonitor_avg,aes(ymin=Intensity_Mean - Intensity_CI,ymax=Intensity_Mean + Intensity_CI))+
+  ggtitle("(b)")+
+   theme(plot.title = element_text(size=12,
+                                  hjust="0",
+                                  family = "Arial",
+                                  face="plain"),
+         legend.position="none")+
+  xlab("Rainfall (mm)")+
+    stat_smooth(method="loess",se=FALSE,color="black")+
+  ylab(expression(paste("Intensity ","(kJ ",s^-1,m^-1,")")))
+
+BurnMonitor_avg$FRI <- as.numeric(as.character(BurnMonitor_avg$FRI))
+
+FRI_FuelLoadPlot <- ggplot(data = subset(BurnMonitor_avg,FRI != 1000), aes(y = FuelLoad_Mean,x=FRI))+
+      scale_color_continuous("Time Since Fire (yr)",low="darkgreen",high="red",guide = guide_legend(title.position="top",label.position="bottom"))+
+
+  ylim(0,5000)+
+  geom_point(size=3)+
+  geom_errorbar(data=BurnMonitor_avg,aes(ymin=FuelLoad_Mean - FuelLoad_CI,ymax=FuelLoad_Mean + FuelLoad_CI),width=0)+
+  myTheme+
+    stat_smooth(method="loess",se=FALSE,color="black")+
+  theme(plot.title = element_text(size=12,
+                                  hjust="0",
+                                  family = "Arial",
+                                  face="plain"))+
+    theme(legend.position=c(0,1),legend.justification=c(0,1),
+        legend.direction="horizontal")+
+  ggtitle("(c)")+
+  xlab("Time Since Fire (yr)")+
+  ylab(expression(paste("Fuel Load ","(kg ",ha^-1,")")))
+
+FRI_IntensityPlot <- ggplot(data = BurnMonitor_avg, aes(y = Intensity_Mean,x=FRI))+
+  geom_point(size=3)+
+    myTheme+
+    stat_smooth(method="loess",se=FALSE,color="black")+
+  #  scale_color_continuous(low="darkgreen",high="red")+
+  geom_errorbar(data=BurnMonitor_avg,aes(ymin=Intensity_Mean - Intensity_CI,ymax=Intensity_Mean + Intensity_CI),width=0)+
+  ggtitle("(d)")+
+   theme(plot.title = element_text(size=12,
+                                  hjust="0",
+                                  family = "Arial",
+                                  face="plain"),
+         legend.position="none")+
+  xlab("Time Since Fire (yr)")+
+  ylab(expression(paste("Intensity ","(kJ ",s^-1,m^-1,")")))
+  
+
+grid.arrange(FuelLoadPlot,IntensityPlot,FRI_FuelLoadPlot,FRI_IntensityPlot,ncol=2)
+```
+Figure 3
+--------
+Probability of Top Kill
+
+```{r Figure3_ProbTop, fig.height=6.5, fig.width=6.1, echo=FALSE,warning=FALSE,message=FALSE, fig.ext='tiff'}
+BurnCheck_1000$TopKilled <- replace(BurnCheck_1000$TopKilled,BurnCheck_1000$TopKilled==TRUE,1)
+BurnCheck_1000$TopKilled <- replace(BurnCheck_1000$TopKilled,BurnCheck_1000$TopKilled==FALSE,0)
+
+BurnCheck_1000$sub <- cut(BurnCheck_1000$Height,seq(0,15,.5),labels=FALSE)
+
+BurnCounter <- ddply(BurnCheck_1000,.(Species,sub,FRI,RainfallRange),summarise,
+      CountKilled = sum(TopKilled == "1"),
+      CountSurvive = sum(TopKilled=="0"))
+
+BurnCounter$ProbTop <- BurnCounter$CountKilled / (BurnCounter$CountKilled + BurnCounter$CountSurvive)
+
+#BurnCheck_1000$sub <- cut(BurnCheck_1000$Height,seq(0,15,.5),labels=FALSE)
+
+#testDummy <- ddply(BurnCounter,.(Species,FRI,RainfallRange,sub),summarise,
+#                   CountKilled = mean(CountKilled),
+#                   CountSurvive = mean(CountSurvive))
+
+#testDummy$ProbTop <- testDummy$CountKilled / (testDummy$CountKilled + testDummy$CountSurvive)
+BurnCounter$FRI <- as.factor(BurnCounter$FRI)
+BurnCounter$FRI <- factor(BurnCounter$FRI,levels=c("1","2","3","4","5","6"),labels=c("FRI: 1 yr","FRI: 2 yr" ,"FRI: 3 yr","FRI: 4 yr","FRI: 5 yr","FRI: 6 yr"))
+
+BurnCounter$RainfallRange <- factor(BurnCounter$RainfallRange,levels=c("250","550","750"),labels=c("MAP: 250 mm","MAP: 550 mm","MAP: 750 mm"))
+
+ProbTop_Plot <- ggplot(data = BurnCounter, aes(y = ProbTop,x=sub,color=Species,group=Species))
+ProbTop_Plot+
+  geom_point(size=3)+
+    myTheme+
+  ylim(0,1)+
+  theme(legend.justification=c(0,1), 
+        legend.position="bottom",
+        legend.direction="horizontal")+
+  stat_smooth(method="loess",se=FALSE)+
+  scale_color_colorblind(breaks=c("COAP", "COMO", "TESE"),
+                       labels=c("C. apiculatum", "C. mopane", "T. sericea"))+
+   theme(plot.title = element_text(size=12,
+                                  hjust="0",
+                                  family = "Arial",
+                                  face="plain"))+
+  xlab("Height (m)")+
+  ylab("Probability of Top Kill")+
+  facet_wrap(FRI ~ RainfallRange,ncol=3)
+
+```
+Figure 4
+---------
+```{r Figure4_AvgHeightPoint, fig.height=6.2, fig.width=6.1, echo=FALSE,warning=FALSE,message=FALSE, fig.ext='tiff'}
+justBurned <- subset(BurnCheck_1000,TopKilled==1)
+
+avgHeightDF <- ddply(justBurned,.(Species,RainfallRange,FRI),summarise,
+                  AvgHeight = mean(Height),
+                  AvgHeightCI = 2*sd(Height,na.rm=TRUE)/sqrt(length(Height)))
+
+
+levels(avgHeightDF$Species) <- c("C. apiculatum", "C. mopane", "T. sericea")
+
+avgHeightPlot <- ggplot(data = avgHeightDF, aes(y=AvgHeight,x=FRI,color=Species,group=Species))
+avgHeightPlot+
+#  geom_histogram(binwidth=2)+
+ # geom_boxplot()+
+ # geom_point()+
+  geom_pointrange(data=avgHeightDF,aes(x=FRI,y=AvgHeight,ymin=AvgHeight - AvgHeightCI,ymax=AvgHeight + AvgHeightCI),size=.75)+
+    myTheme+
+  stat_smooth(method="lm",se=FALSE)+
+  theme(legend.justification=c(0,1), 
+        legend.position="bottom",
+        legend.direction="horizontal")+
+  scale_color_colorblind()+
+ #  theme(plot.title = element_text(size=12,
+  #                                hjust="0",
+   #                               family = "Arial",
+    #                              face="plain"))+
+  xlab("Time Since Fire (yr)")+
+  ylab("Average Height at Top Kill (m)")+
+#  coord_flip()+
+  facet_wrap( ~ RainfallRange,ncol=3)
+
+
+for(l in unique(avgHeightDF$RainfallRange))
+  {
+  rainSub <- subset(avgHeightDF,RainfallRange == l)
+
+  for(m in unique(rainSub$Species))
+    {
+    specSub <- subset(rainSub,Species == m)
+    print(paste(l,"-",m))
+    print(summary(lm(AvgHeight ~ FRI,specSub)))
+    }
+  
+  }
+
+
+```
+ 
+```{r Figure4_boxHeight, fig.height=6.2, fig.width=6.1, echo=FALSE,warning=FALSE,message=FALSE, fig.ext='tiff'}
+
+levels(justBurned$Species) <- c("C. apiculatum", "C. mopane", "T. sericea")
+
+bwHeight <- ggplot(data = justBurned, aes(y=Height,x=as.factor(FRI)))
+bwHeight+
+#  geom_histogram(binwidth=2)+
+  geom_boxplot(data=justBurned, aes(fill=Species))+
+ # geom_point()+
+  #geom_pointrange(data=avgHeightDF,aes(x=FRI,y=AvgHeight,ymin=AvgHeight - AvgHeightCI,ymax=AvgHeight + AvgHeightCI),size=.75)+
+    myTheme+
+  #stat_smooth(method="lm",se=FALSE)+
+  theme(legend.justification=c(0,1), 
+        legend.position="bottom",
+        legend.direction="horizontal")+
+  scale_fill_solarized()+
+ #  theme(plot.title = element_text(size=12,
+  #                                hjust="0",
+   #                               family = "Arial",
+    #                              face="plain"))+
+  xlab("Time Since Fire (yr)")+
+  ylab("Height at Top Kill (m)")+
+#  coord_flip()+
+  facet_wrap( ~ RainfallRange,ncol=3)
+
+```
+
+
+```{r Figure4_AvgHeightPlot, fig.height=6.2, fig.width=6.1, echo=FALSE,warning=FALSE,message=FALSE, fig.ext='tiff'}
+justBurned <- subset(BurnCheck_1000,TopKilled==1)
+
+avgHeightDF <- ddply(justBurned,.(Species,RainfallRange,FRI),summarise,
+                  AvgHeight = mean(Height),
+                  AvgHeightCI = 2*sd(Height,na.rm=TRUE)/sqrt(length(Height)))
+
+
+levels(avgHeightDF$Species) <- c("C. apiculatum", "C. mopane", "T. sericea")
+
+avgHeightPlot <- ggplot(data = avgHeightDF, aes(y=AvgHeight,x=FRI,color=Species,group=Species))
+avgHeightPlot+
+#  geom_histogram(binwidth=2)+
+ # geom_boxplot()+
+ # geom_point()+
+  geom_pointrange(data=avgHeightDF,aes(x=FRI,y=AvgHeight,ymin=AvgHeight - AvgHeightCI,ymax=AvgHeight + AvgHeightCI),size=.75)+
+    myTheme+
+  stat_smooth(method="lm",se=FALSE)+
+  theme(legend.justification=c(0,1), 
+        legend.position="bottom",
+        legend.direction="horizontal")+
+  scale_color_colorblind()+
+ #  theme(plot.title = element_text(size=12,
+  #                                hjust="0",
+   #                               family = "Arial",
+    #                              face="plain"))+
+  xlab("Time Since Fire (yr)")+
+  ylab("Average Height at Top Kill (m)")+
+#  coord_flip()+
+  facet_wrap( ~ RainfallRange,ncol=3)
+
+
+```
+ Fire Escape
+```{r Figure4_escape, fig.height=6.2, fig.width=6.1, echo=FALSE,warning=FALSE,message=FALSE, fig.ext='tiff'}
+EscapedDF <- subset(BurnCheck_1000,Height > 3)
+
+EscapedDF <- ddply(BurnCheck_1000,.(RainfallRange,FRI,Species),summarise,EscapedCount = length(ID[Height > 3]),AllCount = length(ID))
+
+EscapedDF$ProbEscape <- EscapedDF$EscapedCount / (EscapedDF$EscapedCount + EscapedDF$AllCount)
+
+escapedPlot <- ggplot(data = EscapedDF, aes(y=ProbEscape,x=as.factor(FRI),group=Species,color=Species))
+escapedPlot+
+  geom_point()+
+    myTheme+
+  scale_color_colorblind()+
+    stat_smooth(method="lm",se=FALSE)+
+  theme(legend.justification=c(0,1), 
+        legend.position="bottom",
+        legend.direction="horizontal")+
+  xlab("Time Since Fire (yr)")+
+  ylab("Probability of Escape (3 m)")+
+  ylim(0,1)+
+  facet_wrap( ~ RainfallRange,ncol=3)
+
+```
