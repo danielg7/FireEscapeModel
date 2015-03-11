@@ -65,7 +65,7 @@ TESE_naiveGrowth <- lm(log(TotalSize) ~ 0 + log(Age),data=TESE_naive_DF)
 COAP_naiveGrowth <- lm(log(TotalSize) ~ 0 + log(Age),data=COAP_naive_DF)                       
 
 #COMO_nls <- nls(TotalSize ~ (a + Age / b + Age), data = COMO_naive_DF, start=c(a = 100, b = 8))
-
+#TESE_SS <- nls(TotalSize ~ SSasympOrig(input = TESE_naive_DF$Age,Asym = 20,lrc = 1),data = TESE_naive_DF)
 
 COMO_plotDF <- expand.grid(Age=seq(0,20))
 COMO_plotDF$TotalSize <- exp(predict(COMO_naiveGrowth,COMO_plotDF))
@@ -75,6 +75,8 @@ COAP_plotDF$TotalSize <- exp(predict(COAP_naiveGrowth,COAP_plotDF))
 
 TESE_plotDF <- expand.grid(Age=seq(0,20))
 TESE_plotDF$TotalSize <- exp(predict(TESE_naiveGrowth,TESE_plotDF))
+
+TESE_plotDF$TotalSize_SS <- predict(TESE_SS,TESE_plotDF)
 
 TESE_plotDF$SPECIES <- "Terminalia sericea"
 COMO_plotDF$SPECIES <- "Colophospermum mopane"
@@ -92,6 +94,6 @@ levels(displayPlotted$Species)<- c("C. mopane","C. apiculatum","T. sericea")
 displayPlotted_plot <- ggplot(data = displayPlotted, aes(x = Age, y=TotalSize,colour=Species))
 displayPlotted_plot+
   myTheme+
-  ylab("Ring Width (cm)")+
+  ylab("Ring Width (um)")+
   geom_point(data=naive_growth,aes(x = Age,y = TotalSize,color=Species))+
   geom_line()

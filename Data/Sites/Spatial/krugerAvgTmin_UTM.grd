@@ -1,0 +1,27 @@
+[general] 
+creator=R package 'raster' 
+created= 2014-08-04 14:36:13 
+[georeference] 
+nrows= 396 
+ncols= 152 
+xmin= 278600.305662167 
+ymin= -2830012.65055411 
+xmax= 407496.305662167 
+ymax= -2464504.65055411 
+projection= +proj=utm +zone=36 +datum=WGS84 +units=m +no_defs +ellps=WGS84 +towgs84=0,0,0 
+[data] 
+datatype= FLT8S 
+byteorder= little 
+nbands= 1 
+bandorder= BIL 
+categorical= FALSE 
+minvalue= 13.7951489711999 
+maxvalue= 17.0695240986249 
+nodatavalue= -1.7e+308 
+[legend] 
+legendtype=  
+values=  
+color=  
+[description] 
+layername= MeanMinTemp 
+history=  

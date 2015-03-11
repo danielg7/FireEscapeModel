@@ -31,31 +31,35 @@ PRET2011_RINGW_LongForm <- read.csv("Data/MeasuredGrowth/TrialProject/PRET2011_R
 
 
 names(Melon_Sites)[2] <- "Sample"
+names(Melon_Species) <- c("Sample","Species")
+names(Melon_Growth) <- c("Sample","Year","RINGW")
 
 Melon_Master <- merge(Melon_Sites,Melon_Species, by="Sample")
-Melon_Master$Species <- NULL
+Melon_Master$Species.x <- NULL
 
 Melon_Master <- merge(Melon_Master,Melon_Growth,by="Sample")
 Melon_Master$Diam <- NULL
 Melon_Master$TTT <- NULL
+names(Melon_Master)[3] <- "Species"
 
 PRET2011_RINGW_LongForm$Site <- "PRE"
 PRET2011_RINGW_LongForm$SPECIES <-"Terminalia sericea"
+names(PRET2011_RINGW_LongForm) <- c("Sample","Year","RINGW","Site","Species")
 
 Melon_Master <- rbind(Melon_Master,PRET2011_RINGW_LongForm)
 
 Melon_Master$RINGW <- Melon_Master$RINGW/1000
 
-Melon_Master <- Melon_Master[order(Melon_Master$SAMPLE,Melon_Master$YEAR),]
+Melon_Master <- Melon_Master[order(Melon_Master$Sample,Melon_Master$Year),]
 
-Melon_Master <- ddply(Melon_Master,.(SAMPLE),mutate,Growth = cumsum(RINGW))
+Melon_Master <- ddply(Melon_Master,.(Sample),mutate,Growth = cumsum(RINGW))
 
 Melon_Master$EstCrossSection <- (Melon_Master$Growth)^2 * pi
 Melon_Master$EstBasalDiameter <- (Melon_Master$Growth) * 2
 
-Melon_Master <- ddply(Melon_Master,.(SAMPLE),mutate,YearOfGrowth = YEAR - min(YEAR)+1)
+Melon_Master <- ddply(Melon_Master,.(Sample),mutate,YearOfGrowth = Year - min(Year)+1)
 
-Melon_AllWx <- merge(Melon_Master,Kruger_Wx_Combined,by.x=c("YEAR","Site"),by.y=c("Year","Station"))
+Melon_AllWx <- merge(Melon_Master,Kruger_Wx_Combined,by.x=c("Year","Site"),by.y=c("Year","Station"))
 
 MAP <- read.csv("Data/Weather/Kruger_MAP.csv")
 Melon_AllWx <- merge(Melon_AllWx,MAP,by.x="Site",by.y="Station")
@@ -63,23 +67,23 @@ Melon_AllWx <- merge(Melon_AllWx,MAP,by.x="Site",by.y="Station")
 
 
 
-COMO_naive_DF <- subset(Melon_Master,SPECIES=="Colophospermum mopane")
-COAP_naive_DF <- subset(Melon_Master,SPECIES=="Combretum apiculatum")
-TESE_naive_DF <- subset(Melon_Master,SPECIES=="Terminalia sericea")
+COMO_naive_DF <- subset(Melon_Master,Species =="Colophospermum mopane")
+COAP_naive_DF <- subset(Melon_Master,Species =="Combretum apiculatum")
+TESE_naive_DF <- subset(Melon_Master,Species =="Terminalia sericea")
 
-COMO_naiveGrowth <- lm(log(EstBasalDiameter) ~ 0 + log(Age),data=COMO_naive_DF)
-TESE_naiveGrowth <- lm(log(EstBasalDiameter) ~ 0 + log(Age),data=TESE_naive_DF)
-COAP_naiveGrowth <- lm(log(EstBasalDiameter) ~ 0 + log(Age),data=COAP_naive_DF)                       
+COMO_naiveGrowth <- lm(log(EstBasalDiameter) ~ 0 + log(YearOfGrowth),data=COMO_naive_DF)
+TESE_naiveGrowth <- lm(log(EstBasalDiameter) ~ 0 + log(YearOfGrowth),data=TESE_naive_DF)
+COAP_naiveGrowth <- lm(log(EstBasalDiameter) ~ 0 + log(YearOfGrowth),data=COAP_naive_DF)                       
 
 
 
-COMO_plotDF <- expand.grid(Age=seq(0,20))
+COMO_plotDF <- expand.grid(YearOfGrowth=seq(0,20))
 COMO_plotDF$EstBasalDiameter <- exp(predict(COMO_naiveGrowth,COMO_plotDF))
 
-COAP_plotDF <- expand.grid(Age=seq(0,20))
+COAP_plotDF <- expand.grid(YearOfGrowth=seq(0,20))
 COAP_plotDF$EstBasalDiameter <- exp(predict(COAP_naiveGrowth,COAP_plotDF))
 
-TESE_plotDF <- expand.grid(Age=seq(0,20))
+TESE_plotDF <- expand.grid(YearOfGrowth=seq(0,20))
 TESE_plotDF$EstBasalDiameter <- exp(predict(TESE_naiveGrowth,TESE_plotDF))
 
 TESE_plotDF$SPECIES <- "Terminalia sericea"
@@ -91,7 +95,7 @@ displayPlotted <- rbind(TESE_plotDF,COMO_plotDF)
 displayPlotted <- rbind(displayPlotted,COAP_plotDF)
 
 displayPlotted$Species <- as.factor(displayPlotted$SPECIES)
-names(naive_growth)[1] <- "Species"
+names(naive_growth)[1] <- "Site"
 levels(naive_growth$Species)<- c("C. mopane","C. apiculatum","T. sericea")
 levels(displayPlotted$Species)<- c("C. mopane","C. apiculatum","T. sericea")
 
@@ -101,21 +105,21 @@ levels(displayPlotted$Species)<- c("C. mopane","C. apiculatum","T. sericea")
 
 
 ```{r}
-displayPlotted_plot <- ggplot(data = Melon_Master, aes(x = YearOfGrowth, y=EstBasalDiameter,colour=SPECIES,group=SAMPLE))
+displayPlotted_plot <- ggplot(data = Melon_Master, aes(x = YearOfGrowth, y=EstBasalDiameter,colour=Species,group=Sample))
 displayPlotted_plot+
   myTheme+
   ylab("log Ring Width (cm)")+
   xlab("log Age (yrs)")+
   scale_color_colorblind()+
   geom_point()+
-  geom_line(aes(group=SAMPLE))
+  geom_line(aes(group=Sample))
 ```
 
 ```{r}
-naive_growth <- Melon_AllWx[order(Melon_AllWx$SAMPLE,Melon_AllWx$YEAR),]
+naive_growth <- Melon_AllWx[order(Melon_AllWx$Sample,Melon_AllWx$Year),]
 
 naive_growth <- ddply(naive_growth,
-                      .(SPECIES,Site,SAMPLE,MAP),
+                      .(Species,Site,Sample,MAP),
                       mutate,
                       TotalSize = cumsum(EstBasalDiameter),
                       Age = max(YearOfGrowth),
@@ -126,12 +130,25 @@ naive_growth$NaiveRate <- naive_growth$TotalSize/naive_growth$Age
 ```
 
 ```{r}
-cumulativeSum_rate <- ggplot(data = naive_growth, aes(x = log(TotalLifeRain), y=log(TotalSize),colour=SPECIES,group=SAMPLE))
+cumulativeSum_rate <- ggplot(data = naive_growth, aes(x = log(TotalLifeRain), y=log(NaiveRate),colour=Species,group=Sample))
 cumulativeSum_rate+
   myTheme+
   ylab("log Rate of Growth (cm / yr)")+
   xlab("log Total Lifetime Rain (mm)")+
   scale_color_colorblind()+
   geom_point()+
-  geom_line(aes(group=SAMPLE))
+  geom_line(aes(group=Sample))+
+  facet_wrap(~Species)
+```
+
+```{r}
+cumulativeSum_total <- ggplot(data = naive_growth, aes(x = log(TotalLifeRain), y=log(TotalSize),colour=Species,group=Sample))
+cumulativeSum_total+
+  myTheme+
+  ylab("log Total Diameter (cm)")+
+  xlab("log Total Lifetime Rain (mm)")+
+  scale_color_colorblind()+
+  geom_point()+
+  geom_line(aes(group=Sample))+
+  facet_wrap(~Species)
 ```
