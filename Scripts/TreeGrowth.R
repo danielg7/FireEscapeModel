@@ -76,7 +76,7 @@ COAP_plotDF$TotalSize <- exp(predict(COAP_naiveGrowth,COAP_plotDF))
 TESE_plotDF <- expand.grid(Age=seq(0,20))
 TESE_plotDF$TotalSize <- exp(predict(TESE_naiveGrowth,TESE_plotDF))
 
-TESE_plotDF$TotalSize_SS <- predict(TESE_SS,TESE_plotDF)
+#TESE_plotDF$TotalSize_SS <- predict(TESE_SS,TESE_plotDF)
 
 TESE_plotDF$SPECIES <- "Terminalia sericea"
 COMO_plotDF$SPECIES <- "Colophospermum mopane"

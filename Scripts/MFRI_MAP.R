@@ -23,7 +23,7 @@ krugerOverlayRaster <- raster(krugerMAP_UTM)
 krugerOutline <- readOGR(dsn="Data/Sites/Spatial/",layer="boundary_kruger")
 krugerOutline_UTM <- spTransform(x=krugerOutline, CRSobj=crs.k)
 
-krugerMAP_UTM <- projectAndCrop(krugerMAP_UTM,crs.k,krugerOutline_UTM)
+#krugerMAP_UTM <- projectAndCrop(krugerMAP_UTM,crs.k,krugerOutline_UTM)
 krugerMAP_UTM <- projectRaster(from = krugerMAP_UTM,crs = crs.k)
 
 
@@ -44,6 +44,8 @@ krugerFRIBrick <- brick(krugerMAP_UTM,krugerFRIRaster)
 krugerFRI_df <- na.omit(as.data.frame(krugerFRIBrick))
 names(krugerFRI_df) <- c("MAP","MFRI")
 row.names(krugerFRI_df) <- NULL
+
+write.csv(krugerFRI_df,"Data/krugerFRIMAP.csv")
 
 rm(krugerFRIBrick)
 rm(krugerMAP_UTM)
